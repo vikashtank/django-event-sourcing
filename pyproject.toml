@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "django-event-sourcing"
+version = "0.1.0"
+description = "Experimental library for event sourcing with Django."
+authors = ["Vikash Tank <vikashtank@hotmail.co.uk>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+[tool.poetry.dev-dependencies]
+pytest = "^4.6"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
