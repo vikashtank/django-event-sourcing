@@ -29,8 +29,16 @@ class EventTypeRegister(collections.UserDict):
 class EventTypeField(models.CharField):
     """Stores the fully qualified value of an event type."""
 
-    def __init__(self):
-        super().__init__(max_length=255, db_index=True)
+    def __init__(self, *args, **kwargs):
+        kwargs["max_length"] = 255
+        kwargs["db_index"] = True
+        super().__init__(*args, **kwargs)
+
+    def deconstruct(self):
+        name, path, args, kwargs = super().deconstruct()
+        del kwargs["max_length"]
+        del kwargs["db_index"]
+        return name, path, args, kwargs
 
     def from_db_value(self, fully_qualified_value, *args, **kwargs):
         return EventTypeRegister(settings.EVENT_TYPES)[fully_qualified_value]
@@ -49,7 +57,7 @@ class Event(models.Model):
     """Represents an action that will happen."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    raw_type = models.CharField(max_length=255, db_index=True)
+    type = EventTypeField()
     payload = models.JSONField()
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     created_by = models.ForeignKey(
