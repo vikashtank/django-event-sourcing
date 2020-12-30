@@ -5,6 +5,7 @@ description = "Experimental library for event sourcing with Django."
 authors = ["Vikash Tank <vikashtank@hotmail.co.uk>"]
 
 [tool.poetry.dependencies]
+django = "^3.1"
 python = "^3.9"
 
 [tool.poetry.dev-dependencies]
