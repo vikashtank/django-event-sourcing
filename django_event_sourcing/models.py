@@ -12,7 +12,7 @@ class EventType(str, enum.Enum):
 
     @property
     def fully_qualified_value(self):
-        return '.'.join((self.get_namespace(),  self.value))
+        return self.get_namespace() + '.' + self.value
 
 
 class EventTypeRegister(collections.UserDict):
