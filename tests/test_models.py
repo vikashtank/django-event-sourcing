@@ -1,6 +1,11 @@
 from datetime import datetime
 
-from django_event_sourcing.models import Event, EventTypeField, EventTypeRegister
+from django_event_sourcing.models import (
+    Event,
+    EventHandlerRegister,
+    EventTypeField,
+    EventTypeRegister,
+)
 from freezegun import freeze_time
 import pytest
 
@@ -48,3 +53,20 @@ class TestEvent:
         assert event.payload == {}
         assert event.created_at == datetime(2020, 1, 1)
         assert event.created_by == admin_user
+
+
+class TestEventHandlerRegister:
+    def test_handle(self, admin_user, mocker):
+        register = EventHandlerRegister()
+        mock = mocker.Mock()
+
+        @register.register(event_type=DummyEventType.TEST)
+        def handler(event):
+            mock(event.payload["message"])
+
+        event = Event.objects.create(
+            type=DummyEventType.TEST, payload={"message": "test"}, created_by=admin_user
+        )
+
+        register.handle(event)
+        mock.assert_called_once_with("test")

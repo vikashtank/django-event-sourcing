@@ -63,3 +63,20 @@ class Event(models.Model):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="events"
     )
+
+
+class EventHandlerRegister:
+    """Stores event handlers."""
+
+    def __init__(self):
+        self.handlers = collections.defaultdict(lambda: [])
+
+    def register(self, *, event_type):
+        def decorator(f):
+            self.handlers[event_type].append(f)
+
+        return decorator
+
+    def handle(self, event):
+        for handler in self.handlers[event.type]:
+            handler(event)
