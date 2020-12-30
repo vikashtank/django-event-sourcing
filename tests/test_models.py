@@ -50,10 +50,10 @@ class TestEvent:
         assert event.created_by == admin_user
 
     def test_handle(self, event, mocker):
-        register = get_event_handler_register()
+        event_handlers = get_event_handler_register()
         mock = mocker.Mock()
 
-        register.register(event_type=DummyEventType.TEST)(mock)
+        event_handlers.register(event_type=DummyEventType.TEST)(mock)
 
         event.handle()
         mock.assert_called_once_with(event)

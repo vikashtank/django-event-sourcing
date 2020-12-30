@@ -16,10 +16,10 @@ class TestEventTypeRegister:
 
 class TestEventHandlerRegister:
     def test_handle(self, admin_user, mocker):
-        register = EventHandlerRegister()
+        event_handlers = EventHandlerRegister()
         mock = mocker.Mock()
 
-        @register.register(event_type=DummyEventType.TEST)
+        @event_handlers.register(event_type=DummyEventType.TEST)
         def handler(event):
             mock(event.payload["message"])
 
@@ -27,5 +27,5 @@ class TestEventHandlerRegister:
             type=DummyEventType.TEST, payload={"message": "test"}, created_by=admin_user
         )
 
-        register.handle(event)
+        event_handlers.handle(event)
         mock.assert_called_once_with("test")
