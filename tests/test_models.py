@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from django_event_sourcing.globals import get_event_handler_register
 from django_event_sourcing.models import (
     Event,
     EventTypeField,
@@ -34,14 +35,25 @@ class TestEventTypeField:
 
 
 class TestEvent:
-    @freeze_time("2020-01-01")
-    def test_can_be_constructed(self, admin_user):
-        event = Event.objects.create(
-            type=DummyEventType.TEST, payload={}, created_by=admin_user
-        )
+    @pytest.fixture
+    def event(self, admin_user):
+        with freeze_time("2020-01-01"):
+            return Event.objects.create(
+                type=DummyEventType.TEST, payload={}, created_by=admin_user
+            )
 
+    def test_can_be_constructed(self, event, admin_user):
         assert event.id
         assert event.type == DummyEventType.TEST
         assert event.payload == {}
         assert event.created_at == datetime(2020, 1, 1)
         assert event.created_by == admin_user
+
+    def test_handle(self, event, mocker):
+        register = get_event_handler_register()
+        mock = mocker.Mock()
+
+        register.register(event_type=DummyEventType.TEST)(mock)
+
+        event.handle()
+        mock.assert_called_once_with(event)

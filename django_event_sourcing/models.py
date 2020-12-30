@@ -4,7 +4,7 @@ import uuid
 from django.conf import settings
 from django.db import models
 
-from .globals import get_event_type_register
+from .globals import get_event_handler_register, get_event_type_register
 
 
 class EventType(str, enum.Enum):
@@ -52,3 +52,6 @@ class Event(models.Model):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="events"
     )
+
+    def handle(self):
+        return get_event_handler_register().handle(self)
