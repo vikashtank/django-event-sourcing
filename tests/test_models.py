@@ -1,6 +1,8 @@
-import pytest
+from datetime import datetime
 
-from django_event_sourcing.models import EventTypeField, EventTypeRegister
+from django_event_sourcing.models import Event, EventTypeField, EventTypeRegister
+from freezegun import freeze_time
+import pytest
 
 from .event_types import DummyEventType
 
@@ -32,3 +34,17 @@ class TestEventTypeField:
 
     def test_get_prep_value(self):
         assert EventTypeField().get_prep_value(DummyEventType.TEST) == "dummy.test"
+
+
+class TestEvent:
+    @freeze_time("2020-01-01")
+    def test_can_be_constructed(self, admin_user):
+        event = Event.objects.create(
+            type=DummyEventType.TEST, payload={}, created_by=admin_user
+        )
+
+        assert event.id
+        assert event.type == DummyEventType.TEST
+        assert event.payload == {}
+        assert event.created_at == datetime(2020, 1, 1)
+        assert event.created_by == admin_user
