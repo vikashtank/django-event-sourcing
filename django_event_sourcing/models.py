@@ -26,6 +26,25 @@ class EventTypeRegister(collections.UserDict):
                 self.data[event_type.fully_qualified_value] = event_type
 
 
+class EventTypeField(models.CharField):
+    """Stores the fully qualified value of an event type."""
+
+    def __init__(self):
+        super().__init__(max_length=255, db_index=True)
+
+    def from_db_value(self, fully_qualified_value, *args, **kwargs):
+        return EventTypeRegister(settings.EVENT_TYPES)[fully_qualified_value]
+
+    def to_python(self, fully_qualified_value):
+        if isinstance(fully_qualified_value, EventType):
+            return fully_qualified_value
+
+        return EventTypeRegister(settings.EVENT_TYPES)[fully_qualified_value]
+
+    def get_prep_value(self, event_type):
+        return event_type.fully_qualified_value
+
+
 class Event(models.Model):
     """Represents an action that will happen."""
 
