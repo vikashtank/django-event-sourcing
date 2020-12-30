@@ -1,3 +1,12 @@
+import enum
+
 from django.db import models
 
-# Create your models here.
+
+class EventType(str, enum.Enum):
+    """Represents the type of an event."""
+
+    @property
+    def fully_qualified_value(self):
+        return '.'.join((self.get_namespace(),  self.value))
+
