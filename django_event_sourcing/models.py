@@ -12,7 +12,7 @@ class EventType(str, enum.Enum):
 
     @property
     def fully_qualified_value(self):
-        return self.get_namespace() + '.' + self.value
+        return self.get_namespace() + "." + self.value
 
 
 class EventTypeRegister(collections.UserDict):
@@ -52,4 +52,6 @@ class Event(models.Model):
     raw_type = models.CharField(max_length=255, db_index=True)
     payload = models.JSONField()
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="events")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="events"
+    )
