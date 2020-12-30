@@ -1,10 +1,10 @@
-import collections
 import enum
 import uuid
 
 from django.conf import settings
 from django.db import models
-from django.utils.module_loading import import_string
+
+from .globals import get_event_type_register
 
 
 class EventType(str, enum.Enum):
@@ -13,17 +13,6 @@ class EventType(str, enum.Enum):
     @property
     def fully_qualified_value(self):
         return self.get_namespace() + "." + self.value
-
-
-class EventTypeRegister(collections.UserDict):
-    """A dictionary mapping fully qualified event type values with the event type."""
-
-    def __init__(self, event_type_classes):
-        super().__init__()
-        for event_type_class in event_type_classes:
-            event_type_enum = import_string(event_type_class)
-            for event_type in event_type_enum:
-                self.data[event_type.fully_qualified_value] = event_type
 
 
 class EventTypeField(models.CharField):
@@ -41,13 +30,13 @@ class EventTypeField(models.CharField):
         return name, path, args, kwargs
 
     def from_db_value(self, fully_qualified_value, *args, **kwargs):
-        return EventTypeRegister(settings.EVENT_TYPES)[fully_qualified_value]
+        return get_event_type_register()[fully_qualified_value]
 
     def to_python(self, fully_qualified_value):
         if isinstance(fully_qualified_value, EventType):
             return fully_qualified_value
 
-        return EventTypeRegister(settings.EVENT_TYPES)[fully_qualified_value]
+        return get_event_type_register()[fully_qualified_value]
 
     def get_prep_value(self, event_type):
         return event_type.fully_qualified_value
@@ -63,20 +52,3 @@ class Event(models.Model):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="events"
     )
-
-
-class EventHandlerRegister:
-    """Stores event handlers."""
-
-    def __init__(self):
-        self.handlers = collections.defaultdict(lambda: [])
-
-    def register(self, *, event_type):
-        def decorator(f):
-            self.handlers[event_type].append(f)
-
-        return decorator
-
-    def handle(self, event):
-        for handler in self.handlers[event.type]:
-            handler(event)
