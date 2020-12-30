@@ -1,5 +1,8 @@
 INSTALLED_APPS = (
     'django_event_sourcing',
+
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
 )
 
 DATABASES = {
