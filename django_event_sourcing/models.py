@@ -55,3 +55,29 @@ class Event(models.Model):
 
     def handle(self):
         return get_event_handler_register().handle(self)
+
+
+class EventHandlerLogManager(models.Manager):
+    def create_from_function(self, *, function, **kwargs):
+        return self.create(**kwargs, name=function.__name__)
+
+
+class EventHandlerLog(models.Model):
+    class Status(models.TextChoices):
+        PROCESSING = "processing"
+        FAILED = "failed"
+        SUCCESS = "success"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    event = models.ForeignKey(
+        Event, on_delete=models.PROTECT, related_name="handler_logs"
+    )
+    status = models.CharField(
+        choices=Status.choices, max_length=12, db_index=True, default=Status.PROCESSING
+    )
+    name = models.CharField(max_length=255)
+    message = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = EventHandlerLogManager()

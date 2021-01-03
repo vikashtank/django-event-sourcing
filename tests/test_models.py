@@ -3,6 +3,7 @@ from datetime import datetime
 from django_event_sourcing.globals import get_event_handler_register
 from django_event_sourcing.models import (
     Event,
+    EventHandlerLog,
     EventTypeField,
 )
 from freezegun import freeze_time
@@ -34,14 +35,15 @@ class TestEventTypeField:
         assert EventTypeField().get_prep_value(DummyEventType.TEST) == "dummy.test"
 
 
-class TestEvent:
-    @pytest.fixture
-    def event(self, admin_user):
-        with freeze_time("2020-01-01"):
-            return Event.objects.create(
-                type=DummyEventType.TEST, payload={}, created_by=admin_user
-            )
+@pytest.fixture
+def event(admin_user):
+    with freeze_time("2020-01-01"):
+        return Event.objects.create(
+            type=DummyEventType.TEST, payload={}, created_by=admin_user
+        )
 
+
+class TestEvent:
     def test_can_be_constructed(self, event, admin_user):
         assert event.id
         assert event.type == DummyEventType.TEST
@@ -52,8 +54,39 @@ class TestEvent:
     def test_handle(self, event, mocker):
         event_handlers = get_event_handler_register()
         mock = mocker.Mock()
+        mock.__name__ = 'my_function'
 
         event_handlers.register(event_type=DummyEventType.TEST)(mock)
 
         event.handle()
         mock.assert_called_once_with(event)
+
+
+@freeze_time("2020-01-01")
+class TestEventHandlerLog:
+    def test_can_be_constructed(self, event):
+        log = EventHandlerLog.objects.create(
+            status=EventHandlerLog.Status.PROCESSING,
+            name="get_information",
+            event=event,
+        )
+        assert log.id
+        assert log.status == EventHandlerLog.Status.PROCESSING
+        assert log.name == "get_information"
+        assert log.created_at == datetime(2020, 1, 1)
+        assert log.event == event
+
+    def test_create_from_function(self, event):
+        def get_more_information():
+            pass
+
+        log = EventHandlerLog.objects.create_from_function(
+            status=EventHandlerLog.Status.PROCESSING,
+            function=get_more_information,
+            event=event,
+        )
+        assert log.id
+        assert log.status == EventHandlerLog.Status.PROCESSING
+        assert log.name == "get_more_information"
+        assert log.created_at == datetime(2020, 1, 1)
+        assert log.event == event
