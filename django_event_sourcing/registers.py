@@ -28,4 +28,13 @@ class EventHandlerRegister:
 
     def handle(self, event):
         for handler in self.handlers[event.type]:
-            handler(event)
+            handler_log = event.handler_logs.create_from_function(function=handler)
+            try:
+                result = handler(event)
+                handler_log.status = handler_log.Status.SUCCESS
+                handler_log.message = str(result)
+            except Exception as error:
+                handler_log.status = handler_log.Status.FAILED
+                handler_log.message = str(error)
+            finally:
+                handler_log.save()
