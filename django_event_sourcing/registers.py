@@ -35,6 +35,6 @@ class EventHandlerRegister:
                 handler_log.message = str(result)
             except Exception as error:
                 handler_log.status = handler_log.Status.FAILED
-                handler_log.message = str(error)
+                handler_log.message = repr(error)
             finally:
                 handler_log.save()
