@@ -21,10 +21,10 @@ class TestEventHandlerRegister:
 
         @event_handlers.register(event_type=DummyEventType.TEST)
         def handler(event):
-            mock(event.payload["message"])
+            mock(event.data["message"])
 
         event = Event.objects.create(
-            type=DummyEventType.TEST, payload={"message": "test"}, created_by=admin_user
+            type=DummyEventType.TEST, data={"message": "test"}, created_by=admin_user
         )
 
         event_handlers.handle(event)
@@ -40,10 +40,10 @@ class TestEventHandlerRegister:
 
         @event_handlers.register(event_type=DummyEventType.TEST)
         def handler(event):
-            mock(event.payload["message"])
+            mock(event.data["message"])
 
         event = Event.objects.create(
-            type=DummyEventType.TEST, payload={"message": "test"}, created_by=admin_user
+            type=DummyEventType.TEST, data={"message": "test"}, created_by=admin_user
         )
 
         event_handlers.handle(event)

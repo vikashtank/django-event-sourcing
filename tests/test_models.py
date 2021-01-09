@@ -39,7 +39,7 @@ class TestEventTypeField:
 def event(admin_user):
     with freeze_time("2020-01-01"):
         return Event.objects.create(
-            type=DummyEventType.TEST, payload={}, created_by=admin_user
+            type=DummyEventType.TEST, data={}, created_by=admin_user
         )
 
 
@@ -47,7 +47,7 @@ class TestEvent:
     def test_can_be_constructed(self, event, admin_user):
         assert event.id
         assert event.type == DummyEventType.TEST
-        assert event.payload == {}
+        assert event.data == {}
         assert event.created_at == datetime(2020, 1, 1)
         assert event.created_by == admin_user
 
