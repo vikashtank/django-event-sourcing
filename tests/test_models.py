@@ -48,6 +48,7 @@ class TestEvent:
         assert event.id
         assert event.type == DummyEventType.TEST
         assert event.data == {}
+        assert event.context == {}
         assert event.created_at == datetime(2020, 1, 1)
         assert event.created_by == admin_user
 
