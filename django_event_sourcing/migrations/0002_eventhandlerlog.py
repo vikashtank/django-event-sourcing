@@ -8,20 +8,47 @@ import uuid
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('django_event_sourcing', '0001_initial'),
+        ("django_event_sourcing", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='EventHandlerLog',
+            name="EventHandlerLog",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('status', models.CharField(choices=[('processing', 'Processing'), ('failed', 'Failed'), ('success', 'Success')], db_index=True, default='processing', max_length=12)),
-                ('name', models.CharField(max_length=255)),
-                ('message', models.TextField(blank=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('event', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='handler_logs', to='django_event_sourcing.event')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("processing", "Processing"),
+                            ("failed", "Failed"),
+                            ("success", "Success"),
+                        ],
+                        db_index=True,
+                        default="processing",
+                        max_length=12,
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
+                ("message", models.TextField(blank=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "event",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="handler_logs",
+                        to="django_event_sourcing.event",
+                    ),
+                ),
             ],
         ),
     ]

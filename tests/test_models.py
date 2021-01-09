@@ -54,7 +54,7 @@ class TestEvent:
     def test_handle(self, event, mocker):
         event_handlers = get_event_handler_register()
         mock = mocker.Mock()
-        mock.__name__ = 'my_function'
+        mock.__name__ = "my_function"
 
         event_handlers.register(event_type=DummyEventType.TEST)(mock)
 
