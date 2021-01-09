@@ -51,4 +51,4 @@ class TestEventHandlerRegister:
 
         log = event.handler_logs.get()
         assert log.status == EventHandlerLog.Status.FAILED
-        assert log.message == "Help im erroring"
+        assert log.message == "Exception('Help im erroring')"
