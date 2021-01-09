@@ -42,6 +42,13 @@ class EventTypeField(models.CharField):
         return event_type.fully_qualified_value
 
 
+class EventManager(models.Manager):
+    def create_and_handle(self, **kwargs):
+        event = self.create(**kwargs)
+        result = event.handle()
+        return event, result
+
+
 class Event(models.Model):
     """Represents an action that will happen."""
 
@@ -53,6 +60,8 @@ class Event(models.Model):
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="events"
     )
+
+    objects = EventManager()
 
     def handle(self):
         return get_event_handler_register().handle(self)

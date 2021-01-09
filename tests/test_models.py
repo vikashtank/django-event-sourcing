@@ -44,6 +44,17 @@ def event(admin_user):
 
 
 class TestEvent:
+    @pytest.fixture
+    def mock_event_handler_for_test(self, mocker):
+        event_handlers = get_event_handler_register()
+
+        mock = mocker.Mock()
+        mock.__name__ = "my_function"
+
+        event_handlers.register(event_type=DummyEventType.TEST)(mock)
+
+        return mock
+
     def test_can_be_constructed(self, event, admin_user):
         assert event.id
         assert event.type == DummyEventType.TEST
@@ -52,15 +63,15 @@ class TestEvent:
         assert event.created_at == datetime(2020, 1, 1)
         assert event.created_by == admin_user
 
-    def test_handle(self, event, mocker):
-        event_handlers = get_event_handler_register()
-        mock = mocker.Mock()
-        mock.__name__ = "my_function"
-
-        event_handlers.register(event_type=DummyEventType.TEST)(mock)
-
+    def test_handle(self, event, mock_event_handler_for_test):
         event.handle()
-        mock.assert_called_once_with(event)
+        mock_event_handler_for_test.assert_called_once_with(event)
+
+    def test_create_and_handle(self, admin_user, mock_event_handler_for_test):
+        event, _ = Event.objects.create_and_handle(
+            type=DummyEventType.TEST, data={}, created_by=admin_user
+        )
+        mock_event_handler_for_test.assert_called_once_with(event)
 
 
 @freeze_time("2020-01-01")
