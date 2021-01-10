@@ -33,6 +33,18 @@ class TestEventHandlerRegister:
         log = event.handler_logs.get()
         assert log.status == EventHandlerLog.Status.SUCCESS
 
+    def test_handles_multiple_event_types(self):
+        event_handlers = EventHandlerRegister()
+
+        @event_handlers.register(
+            event_type=[DummyEventType.TEST, DummyEventType.TEST_ANOTHER]
+        )
+        def handler(event):
+            pass
+
+        assert handler in event_handlers.handlers[DummyEventType.TEST]
+        assert handler in event_handlers.handlers[DummyEventType.TEST_ANOTHER]
+
     def test_handles_failure(self, admin_user, mocker):
         event_handlers = EventHandlerRegister()
         mock = mocker.Mock()

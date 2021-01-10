@@ -1,6 +1,9 @@
 import collections
+from collections.abc import Iterable
 
 from django.utils.module_loading import import_string
+
+from .models import EventType
 
 
 class EventTypeRegister(collections.UserDict):
@@ -22,7 +25,15 @@ class EventHandlerRegister:
 
     def register(self, *, event_type):
         def decorator(f):
-            self.handlers[event_type].append(f)
+            if isinstance(event_type, EventType):
+                self.handlers[event_type].append(f)
+            elif isinstance(event_type, Iterable):
+                for type in event_type:
+                    self.handlers[type].append(f)
+            else:
+                raise TypeError(f"Unknown event type: {event_type}")
+
+            return f
 
         return decorator
 
