@@ -77,6 +77,7 @@ class Event(models.Model):
     objects = EventManager()
 
     def handle(self):
+        self.refresh_from_db()  # To ensure we haven't got any old references.
         return get_event_handler_register().handle(self)
 
 
