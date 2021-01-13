@@ -2,6 +2,7 @@ import enum
 import uuid
 
 from django.conf import settings
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 
 from .globals import get_event_handler_register, get_event_type_register
@@ -54,8 +55,8 @@ class Event(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     type = EventTypeField()
-    data = models.JSONField()
-    context = models.JSONField(db_index=True, default=dict)
+    data = models.JSONField(encoder=DjangoJSONEncoder)
+    context = models.JSONField(encoder=DjangoJSONEncoder, db_index=True, default=dict)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="events"
