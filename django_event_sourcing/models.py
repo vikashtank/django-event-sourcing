@@ -2,6 +2,7 @@ import enum
 import uuid
 
 from django.conf import settings
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 
 from .globals import get_event_handler_register, get_event_type_register
@@ -49,13 +50,22 @@ class EventManager(models.Manager):
         return event, result
 
 
+class ModelJSONEncoder(DjangoJSONEncoder):
+    """Encodes a model by getting the primary key."""
+
+    def default(self, obj):
+        if isinstance(obj, models.Model):
+            return obj.pk
+        return super().default(obj)
+
+
 class Event(models.Model):
     """Represents an action that will happen."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     type = EventTypeField()
-    data = models.JSONField()
-    context = models.JSONField(db_index=True, default=dict)
+    data = models.JSONField(encoder=ModelJSONEncoder)
+    context = models.JSONField(encoder=ModelJSONEncoder, db_index=True, default=dict)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="events"

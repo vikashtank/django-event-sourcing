@@ -1,4 +1,5 @@
 from datetime import datetime
+import uuid
 
 from django_event_sourcing.globals import get_event_handler_register
 from django_event_sourcing.models import (
@@ -62,6 +63,19 @@ class TestEvent:
         assert event.context == {}
         assert event.created_at == datetime(2020, 1, 1)
         assert event.created_by == admin_user
+
+    def test_can_encode_uuid(self, event):
+        uuid_value = uuid.uuid4()
+        event.data = {"uuid": uuid_value}
+        event.save()
+        event.refresh_from_db()
+        assert event.data["uuid"] == str(uuid_value)
+
+    def test_can_encode_model(self, event, admin_user):
+        event.data = {"event": event}
+        event.save()
+        event.refresh_from_db()
+        assert event.data["event"] == str(event.pk)
 
     def test_handle(self, event, mock_event_handler_for_test):
         event.handle()
