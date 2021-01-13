@@ -71,6 +71,12 @@ class TestEvent:
         event.refresh_from_db()
         assert event.data["uuid"] == str(uuid_value)
 
+    def test_can_encode_model(self, event, admin_user):
+        event.data = {"event": event}
+        event.save()
+        event.refresh_from_db()
+        assert event.data["event"] == str(event.pk)
+
     def test_handle(self, event, mock_event_handler_for_test):
         event.handle()
         mock_event_handler_for_test.assert_called_once_with(event)
