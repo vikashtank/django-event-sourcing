@@ -15,6 +15,9 @@ class EventType(str, enum.Enum):
     def fully_qualified_value(self):
         return self.get_namespace() + "." + self.value
 
+    def __hash__(self):
+        return hash(self.fully_qualified_value)
+
 
 class EventTypeField(models.CharField):
     """Stores the fully qualified value of an event type."""

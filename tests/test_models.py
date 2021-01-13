@@ -5,6 +5,7 @@ from django_event_sourcing.globals import get_event_handler_register
 from django_event_sourcing.models import (
     Event,
     EventHandlerLog,
+    EventType,
     EventTypeField,
 )
 from freezegun import freeze_time
@@ -16,6 +17,15 @@ from .event_types import DummyEventType
 class TestEventType:
     def test_fully_qualified_value(self):
         assert DummyEventType.TEST.fully_qualified_value == "dummy.test"
+
+    def test_hashes_with_namespace(self):
+        class DumberEventType(EventType):
+            TEST = "test"
+
+            def get_namespace(self):
+                return "dumber"
+
+        assert hash(DumberEventType.TEST) != hash(DummyEventType.TEST)
 
 
 class TestEventTypeField:
