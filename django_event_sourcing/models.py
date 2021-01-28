@@ -68,7 +68,6 @@ class Event(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     type = EventTypeField()
     data = models.JSONField(encoder=ModelJSONEncoder)
-    context = models.JSONField(encoder=ModelJSONEncoder, db_index=True, default=dict)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="events"
