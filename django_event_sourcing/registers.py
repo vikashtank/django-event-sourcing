@@ -22,6 +22,7 @@ class EventHandlerRegister:
 
     def __init__(self):
         self.handlers = collections.defaultdict(lambda: [])
+        self.side_effects = collections.defaultdict(lambda: [])
 
     def register(self, *, event_type):
         def decorator(f):
@@ -37,7 +38,14 @@ class EventHandlerRegister:
 
         return decorator
 
-    def handle(self, event):
+    def register_side_effect(self, *, side_effect):
+        def decorator(f):
+            self.side_effects[f].append(side_effect)
+            return f
+
+        return decorator
+
+    def handle(self, event, skip_side_effects=False):
         for handler in self.handlers[event.type]:
             handler_log = event.handler_logs.create_from_function(function=handler)
             try:
@@ -49,3 +57,20 @@ class EventHandlerRegister:
                 handler_log.message = repr(error)
             finally:
                 handler_log.save()
+
+            if skip_side_effects or handler_log.status == handler_log.Status.FAILED:
+                continue
+
+            for side_effect in self.side_effects[handler]:
+                side_effect_log = handler_log.side_effect_logs.create_from_function(
+                    function=side_effect
+                )
+                try:
+                    result = side_effect(result)
+                    side_effect_log.status = handler_log.Status.SUCCESS
+                    side_effect_log.message = str(result)
+                except Exception as error:
+                    side_effect_log.status = handler_log.Status.FAILED
+                    side_effect_log.message = repr(error)
+                finally:
+                    side_effect_log.save()
