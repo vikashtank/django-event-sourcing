@@ -104,3 +104,28 @@ class EventHandlerLog(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     objects = EventHandlerLogManager()
+
+    @property
+    def failed(self):
+        return self.status == self.Status.FAILED
+
+
+class EventSideEffectLog(models.Model):
+    class Status(models.TextChoices):
+        PROCESSING = "processing"
+        FAILED = "failed"
+        SUCCESS = "success"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    handler_log = models.ForeignKey(
+        EventHandlerLog, on_delete=models.PROTECT, related_name="side_effect_logs"
+    )
+    status = models.CharField(
+        choices=Status.choices, max_length=12, db_index=True, default=Status.PROCESSING
+    )
+    name = models.CharField(max_length=255)
+    message = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    objects = EventHandlerLogManager()

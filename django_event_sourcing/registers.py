@@ -22,6 +22,7 @@ class EventHandlerRegister:
 
     def __init__(self):
         self.handlers = collections.defaultdict(lambda: [])
+        self.side_effects = collections.defaultdict(lambda: [])
 
     def register(self, *, event_type):
         def decorator(f):
@@ -37,15 +38,37 @@ class EventHandlerRegister:
 
         return decorator
 
-    def handle(self, event):
+    def register_side_effect(self, *, side_effect):
+        def decorator(f):
+            self.side_effects[f].append(side_effect)
+            return f
+
+        return decorator
+
+    def _run_event_function(self, log, function, *args, **kwargs):
+        result = None
+        try:
+            result = function(*args, **kwargs)
+            log.status = log.Status.SUCCESS
+            log.message = str(result)
+        except Exception as error:
+            log.status = log.Status.FAILED
+            log.message = repr(error)
+        finally:
+            log.save()
+
+        return result
+
+    def handle(self, event, skip_side_effects=False):
         for handler in self.handlers[event.type]:
             handler_log = event.handler_logs.create_from_function(function=handler)
-            try:
-                result = handler(event)
-                handler_log.status = handler_log.Status.SUCCESS
-                handler_log.message = str(result)
-            except Exception as error:
-                handler_log.status = handler_log.Status.FAILED
-                handler_log.message = repr(error)
-            finally:
-                handler_log.save()
+            result = self._run_event_function(handler_log, handler, event)
+
+            if skip_side_effects or handler_log.failed:
+                continue
+
+            for side_effect in self.side_effects[handler]:
+                side_effect_log = handler_log.side_effect_logs.create_from_function(
+                    function=side_effect
+                )
+                self._run_event_function(side_effect_log, side_effect, result)
