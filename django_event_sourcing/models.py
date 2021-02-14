@@ -105,6 +105,10 @@ class EventHandlerLog(models.Model):
 
     objects = EventHandlerLogManager()
 
+    @property
+    def failed(self):
+        return self.status == self.Status.FAILED
+
 
 class EventSideEffectLog(models.Model):
     class Status(models.TextChoices):
