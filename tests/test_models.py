@@ -27,6 +27,9 @@ class TestEventType:
 
         assert hash(DumberEventType.TEST) != hash(DummyEventType.TEST)
 
+    def test_stringify(self, admin_user):
+        assert str(DummyEventType.TEST) == "dummy.test"
+
 
 class TestEventTypeField:
     def test_from_db_value(self):
