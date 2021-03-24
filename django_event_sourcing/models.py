@@ -118,6 +118,7 @@ class EventSideEffectLog(models.Model):
         PROCESSING = "processing"
         FAILED = "failed"
         SUCCESS = "success"
+        SKIPPED = "skipped"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     handler_log = models.ForeignKey(
