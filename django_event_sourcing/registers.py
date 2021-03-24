@@ -3,7 +3,7 @@ from collections.abc import Iterable
 
 from django.utils.module_loading import import_string
 
-from .models import EventType
+from .models import EventType, EventSideEffectLog
 
 
 class EventTypeRegister(collections.UserDict):
@@ -15,6 +15,11 @@ class EventTypeRegister(collections.UserDict):
             event_type_enum = import_string(event_type_class)
             for event_type in event_type_enum:
                 self.data[event_type.fully_qualified_value] = event_type
+
+
+RegisteredSideEffect = collections.namedtuple(
+    "RegisteredSideEffect", field_names=("callable", "condition")
+)
 
 
 class EventHandlerRegister:
@@ -38,9 +43,9 @@ class EventHandlerRegister:
 
         return decorator
 
-    def register_side_effect(self, *, side_effect):
+    def register_side_effect(self, callable, *, condition=None):
         def decorator(f):
-            self.side_effects[f].append(side_effect)
+            self.side_effects[f].append(RegisteredSideEffect(callable, condition))
             return f
 
         return decorator
@@ -67,8 +72,21 @@ class EventHandlerRegister:
             if skip_side_effects or handler_log.failed:
                 continue
 
-            for side_effect in self.side_effects[handler]:
-                side_effect_log = handler_log.side_effect_logs.create_from_function(
-                    function=side_effect
+            for registered_side_effect in self.side_effects[handler]:
+                condition_class = registered_side_effect.condition
+                should_run = (
+                    condition_class().has_condition(event) if condition_class else True
                 )
-                self._run_event_function(side_effect_log, side_effect, result)
+                status = (
+                    EventSideEffectLog.Status.PROCESSING
+                    if should_run
+                    else EventSideEffectLog.Status.SKIPPED
+                )
+                side_effect_log = handler_log.side_effect_logs.create_from_function(
+                    function=registered_side_effect.callable, status=status
+                )
+
+                if should_run:
+                    self._run_event_function(
+                        side_effect_log, registered_side_effect.callable, result
+                    )

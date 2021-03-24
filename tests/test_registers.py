@@ -1,5 +1,5 @@
+from django_event_sourcing.conditions import Condition
 from django_event_sourcing.models import Event, EventHandlerLog, EventSideEffectLog
-
 from django_event_sourcing.registers import (
     EventHandlerRegister,
     EventTypeRegister,
@@ -76,7 +76,7 @@ class TestEventHandlerRegister:
             return side_effect_mock(result)
 
         @event_handlers.register(event_type=DummyEventType.TEST)
-        @event_handlers.register_side_effect(side_effect=side_effect)
+        @event_handlers.register_side_effect(side_effect)
         def handler(event):
             return mock(event.data["message"])
 
@@ -105,7 +105,7 @@ class TestEventHandlerRegister:
             return side_effect_mock(result)
 
         @event_handlers.register(event_type=DummyEventType.TEST)
-        @event_handlers.register_side_effect(side_effect=side_effect)
+        @event_handlers.register_side_effect(side_effect)
         def handler(event):
             return mock(event.data["message"])
 
@@ -133,7 +133,7 @@ class TestEventHandlerRegister:
             return side_effect_mock(result)
 
         @event_handlers.register(event_type=DummyEventType.TEST)
-        @event_handlers.register_side_effect(side_effect=side_effect)
+        @event_handlers.register_side_effect(side_effect)
         def handler(event):
             return mock(event.data["message"])
 
@@ -149,3 +149,36 @@ class TestEventHandlerRegister:
         assert log.status == EventHandlerLog.Status.FAILED
 
         assert log.side_effect_logs.count() == 0
+
+    def test_skips_side_effect_with_failing_conditions(self, admin_user, mocker):
+        event_handlers = EventHandlerRegister()
+        mock = mocker.Mock()
+        mock.return_value = "result"
+
+        side_effect_mock = mocker.Mock()
+
+        def side_effect(result):
+            return side_effect_mock(result)
+
+        class TestCondition(Condition):
+            def has_condition(self, event):
+                return False
+
+        @event_handlers.register(event_type=DummyEventType.TEST)
+        @event_handlers.register_side_effect(side_effect, condition=TestCondition)
+        def handler(event):
+            return mock(event.data["message"])
+
+        event = Event.objects.create(
+            type=DummyEventType.TEST, data={"message": "test"}, created_by=admin_user
+        )
+
+        event_handlers.handle(event)
+        mock.assert_called_once_with("test")
+        side_effect_mock.assert_not_called()
+
+        log = event.handler_logs.get()
+        assert log.status == EventHandlerLog.Status.SUCCESS
+
+        side_effect_log = log.side_effect_logs.get()
+        assert side_effect_log.status == EventSideEffectLog.Status.SKIPPED
